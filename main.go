@@ -36,7 +36,7 @@ func main() {
 func getLatestCoinDeployNotice() string {
 	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer res.Body.Close()
 
@@ -45,11 +45,11 @@ func getLatestCoinDeployNotice() string {
 	//_, err = io.Copy(out, res.Body)
 
 	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
 	}
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	title := ""
 	doc.Find("#__APP_DATA").Each(func(i int, s *goquery.Selection) {
