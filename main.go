@@ -38,7 +38,6 @@ func getLatestCoinDeployNotice() string {
 	if err != nil {
 		log.Println(err)
 	}
-	defer res.Body.Close()
 
 	//out, err := os.Create("1.html")
 	//defer out.Close()
@@ -68,6 +67,9 @@ func getLatestCoinDeployNotice() string {
 			}
 		}
 	})
+	if res != nil && res.Body != nil {
+		res.Body.Close()
+	}
 	return title
 }
 
