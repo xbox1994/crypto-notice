@@ -19,21 +19,28 @@ const (
 )
 
 func main() {
-	title := getLatestCoinDeployNotice()
+	titlePair, titleNews := getLatestCoinDeployNotice(url)
 	for true {
-		time.Sleep(60 * time.Second)
-		newTitle := getLatestCoinDeployNotice()
-		if newTitle != title {
-			msg, err := SendCardMsg("wangtianyi", "binance", title, url)
+		newTitlePair, newTitleNews := getLatestCoinDeployNotice(url)
+		if newTitlePair != titlePair {
+			msg, err := SendCardMsg("wangtianyi", newTitlePair, "bn", url)
 			if err != nil {
 				log.Println(msg)
 			}
-			title = newTitle
+			titlePair = newTitlePair
 		}
+		if newTitleNews != titleNews {
+			msg, err := SendCardMsg("wangtianyi", newTitleNews, "bn", url)
+			if err != nil {
+				log.Println(msg)
+			}
+			titleNews = newTitleNews
+		}
+		time.Sleep(60 * time.Second)
 	}
 }
 
-func getLatestCoinDeployNotice() string {
+func getLatestCoinDeployNotice(url string) (string, string) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Println(err)
@@ -50,7 +57,8 @@ func getLatestCoinDeployNotice() string {
 	if err != nil {
 		log.Println(err)
 	}
-	title := ""
+	titlePair := ""
+	titleNews := ""
 	doc.Find("#__APP_DATA").Each(func(i int, s *goquery.Selection) {
 		text := s.Text()
 		//ioutil.WriteFile("1.json", []byte(text), 0644)
@@ -58,11 +66,17 @@ func getLatestCoinDeployNotice() string {
 		jsonParsed, _ := gabs.ParseJSON([]byte(text))
 
 		// Search JSON
-		//fmt.Println(jsonParsed.Path("routeProps.b723.catalogs.0.articles").Data())
 		for key, child := range jsonParsed.Search("routeProps", "b723", "catalogs", "0", "articles", "0").ChildrenMap() {
 			if key == "title" {
-				title = child.Data().(string)
-				fmt.Printf("Key=>%v, Value=>%v\n", key, title)
+				titlePair = child.Data().(string)
+				fmt.Printf("%s: %v\n", time.Now().Format("2006-01-02 15:04:05"), titlePair)
+				break
+			}
+		}
+		for key, child := range jsonParsed.Search("routeProps", "b723", "catalogs", "1", "articles", "0").ChildrenMap() {
+			if key == "title" {
+				titleNews = child.Data().(string)
+				fmt.Printf("%s: %v\n", time.Now().Format("2006-01-02 15:04:05"), titleNews)
 				break
 			}
 		}
@@ -70,7 +84,7 @@ func getLatestCoinDeployNotice() string {
 	if res != nil && res.Body != nil {
 		res.Body.Close()
 	}
-	return title
+	return titlePair, titleNews
 }
 
 // 企业微信应用消息提醒方法如下
@@ -105,7 +119,6 @@ func SendCardMsg(ToUsers interface{}, title, description, url string) (map[strin
 
 	sendurl := fmt.Sprintf("https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s", access_token)
 	data, err = httpPostJson(sendurl, req)
-	fmt.Println(data)
 	if err != nil {
 		log.Println(err)
 		return nil, err
