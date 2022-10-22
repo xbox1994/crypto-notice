@@ -15,7 +15,7 @@ const (
 	corpid  = "ww7064a3ad71f6a148"                          //企业ID
 	agentId = "1000002"                                     //应用ID
 	secret  = "EcLXAGjT2ybsqhTqzQpJz7XF-HAvcHZEHt2k2rdsV5U" //Secret
-	url     = "https://www.binance.com/en/support/announcement/c-48"
+	url     = "https://www.binance.com/zh-CN/support/announcement/c-48"
 )
 
 func main() {
@@ -41,7 +41,12 @@ func main() {
 }
 
 func getLatestCoinDeployNotice(url string) (string, string) {
-	res, err := http.Get(url)
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Cache-Control", "max-age=0, no-cache, must-revalidate, proxy-revalidate")
+	req.Header.Set("Expires", "Tue, 03 Jul 2001 06:00:00 GMT")
+	req.Header.Set("Last-Modified", "{now} GMT")
+	res, err := client.Do(req)
 	if err != nil || res == nil {
 		log.Println(err)
 		return "", ""
